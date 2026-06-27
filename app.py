@@ -15,35 +15,108 @@ LOGIN_PAGE = '''
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <title>Login - JWT Challenge</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 320px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        input[type=text] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        ul {
+            text-align: left;
+            padding-left: 20px;
+        }
+        .hint {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
+<div class="container">
     <h2>Login</h2>
     <form id="loginForm">
         <input type="text" id="username" placeholder="Username" required>
         <button type="submit">Login</button>
     </form>
     <div id="result"></div>
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                document.getElementById('result').innerHTML = 
-                    `<p>Token: <code>${data.token}</code></p>` +
-                    `<p>Decode it at https://jwt.io to see the header and payload.</p>` +
-                    `<p>Try to forge an admin token by changing the algorithm to HS256 and signing with the public key.</p>`;
-            } else {
-                document.getElementById('result').innerHTML = `<p>Error: ${data.error}</p>`;
-            }
+</div>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
         });
-    </script>
+        const data = await response.json();
+        if (response.ok) {
+            document.getElementById('result').innerHTML =
+                `<p>Token: <code>${data.token}</code></p>` +
+                `<p class="hint">Hint: Decode this token at https://jwt.io to see the header and payload.</p>` +
+                `<p>Then:</p>` +
+                `<ul>` +
+                `<li>Change the payload "sub" to "admin" and "role" to "admin"</li>` +
+                `<li>Change the header "alg" from "RS256" to "HS256"</li>` +
+                `<li>Sign the modified token using HS256 with the <strong>public key</strong> (found in public.pem) as the secret</li>` +
+                `</ul>` +
+                `<p>Use the forged token in the Authorization header to access /profile and get the flag.</p>`;
+        } else {
+            document.getElementById('result').innerHTML = `<p>Error: ${data.error}</p>`;
+        }
+    });
+</script>
 </body>
 </html>
 '''
