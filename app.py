@@ -15,11 +15,11 @@ LOGIN_PAGE = '''
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login - JWT Challenge</title>
+    <title>Soap JWT Challenge</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f5f5f5;
+            background: #f0f8ff;
             margin: 0;
             padding: 0;
             display: flex;
@@ -30,81 +30,123 @@ LOGIN_PAGE = '''
         .container {
             background: white;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 320px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 360px;
+            text-align: center;
+        }
+        .soap-img {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
         }
         h2 {
-            text-align: center;
-            color: #333;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        p.desc {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .form-group {
             margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
         }
         input[type=text] {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
             box-sizing: border-box;
+            font-size: 16px;
         }
         button {
             width: 100%;
-            padding: 10px;
-            background: #007bff;
+            padding: 12px;
+            background: #3498db;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
         }
         button:hover {
-            background: #0056b3;
+            background: #2980b9;
         }
         #result {
-            margin-top: 20px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 4px;
+            margin-top: 25px;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 5px;
             font-size: 14px;
+            text-align: left;
         }
         code {
-            background: #e9ecef;
-            padding: 2px 4px;
+            background: #bdc3c7;
+            padding: 2px 5px;
             border-radius: 3px;
+            font-family: monospace;
         }
         ul {
             text-align: left;
             padding-left: 20px;
+            margin-top: 10px;
         }
         .hint {
-            color: #28a745;
+            color: #27ae60;
             font-weight: bold;
+            margin-top: 10px;
+            display: block;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>Login</h2>
-    <form id="loginForm">
-        <input type="text" id="username" placeholder="Username" required>
-        <button type="submit">Login</button>
-    </form>
+    <!-- Soap SVG -->
+    <svg class="soap-img" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="10" width="80" height="80" rx="15" ry="15" fill="#e8f4fc" stroke="#3498db" stroke-width="2"/>
+        <circle cx="50" cy="30" r="12" fill="#3498db"/>
+        <circle cx="30" cy="50" r="12" fill="#3498db"/>
+        <circle cx="70" cy="50" r="12" fill="#3498db"/>
+        <circle cx="50" cy="70" r="12" fill="#3498db"/>
+        <text x="50" y="90" text-anchor="middle" font-family="Arial" font-size="12" fill="#2c3e50">SOAP</text>
+    </svg>
+    <h2>Login to Forge JWT</h2>
+    <p class="desc">Enter your username to receive a token, then forge an admin token to capture the flag.</p>
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" placeholder="Enter username" required>
+    </div>
+    <button id="loginBtn">Login</button>
     <div id="result"></div>
 </div>
 <script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        const username = document.getElementById('username').value.trim();
+        if (!username) {
+            alert('Please enter a username');
+            return;
+        }
         const response = await fetch('/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username })
         });
         const data = await response.json();
+        const resultDiv = document.getElementById('result');
         if (response.ok) {
-            document.getElementById('result').innerHTML =
+            resultDiv.innerHTML =
                 `<p>Token: <code>${data.token}</code></p>` +
-                `<p class="hint">Hint: Decode this token at https://jwt.io to see the header and payload.</p>` +
+                `<div class="hint">Hint: Decode this token at https://jwt.io to see the header and payload.</div>` +
                 `<p>Then:</p>` +
                 `<ul>` +
                 `<li>Change the payload "sub" to "admin" and "role" to "admin"</li>` +
@@ -113,7 +155,7 @@ LOGIN_PAGE = '''
                 `</ul>` +
                 `<p>Use the forged token in the Authorization header to access /profile and get the flag.</p>`;
         } else {
-            document.getElementById('result').innerHTML = `<p>Error: ${data.error}</p>`;
+            resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
         }
     });
 </script>

@@ -3,7 +3,7 @@
 ## Setup
 1. Start the vulnerable app: `python app.py`
 2. Configure your browser to use Burp Suite as proxy (usually 127.0.0.1:8080)
-3. Visit http://localhost:5000 in your browser
+3. Visit http://localhost:5000 in your browser (you will see a soap-themed login page)
 
 ## Steps
 
