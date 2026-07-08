@@ -1,0 +1,77 @@
+/* Queue page */
+.queue-card {
+  max-width: 520px;
+  margin: 48px auto;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 36px 32px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.queue-logo { display: flex; justify-content: center; margin-bottom: 8px; }
+.queue-title { margin: 0; font-size: 24px; }
+.queue-sub { color: var(--c-muted); margin-top: 6px; margin-bottom: 28px; }
+
+.queue-ticket {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px;
+  background: var(--c-blue-light);
+  border-radius: var(--radius);
+  border: 1px dashed var(--c-blue);
+  margin-bottom: 24px;
+}
+.queue-ticket-label {
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-size: 11px;
+  color: var(--c-blue-dark);
+  font-weight: 600;
+}
+.queue-ticket-value {
+  font-size: 32px;
+  font-weight: 700;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  margin-top: 6px;
+  color: var(--c-blue-dark);
+  letter-spacing: 1px;
+}
+
+.progress {
+  width: 100%;
+  height: 10px;
+  background: var(--c-blue-light);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-blue), #4a8de9);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--c-blue-light);
+  border-top-color: var(--c-blue);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+.status-message { color: var(--c-muted); margin: 0; font-size: 14px; }
+
+.countdown-label { color: var(--c-muted); font-size: 13px; margin-top: 16px; }
+
+@keyframes spin { to { transform: rotate(360deg); } }

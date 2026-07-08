@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}SOAP Company &middot; Error {{ code }}{% endblock %}
+{% block content %}
+<section class="error-card">
+  <div class="error-code">{{ code }}</div>
+  <h1>{{ message }}</h1>
+  <p><a class="btn-primary" href="{{ url_for('auth.queue') }}">Return to queue</a></p>
+</section>
+{% endblock %}

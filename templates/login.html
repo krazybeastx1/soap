@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}SOAP Company &middot; Login{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+{% block content %}
+<section class="login-card">
+  <div class="login-header">
+    <span class="brand-mark large">S</span>
+    <h1>SOAP Company Portal</h1>
+    <p class="login-sub">Sign in with the queue number you were issued.</p>
+  </div>
+
+  {% if error %}
+    <div class="alert error" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('auth.login') }}" class="login-form" autocomplete="off">
+    <label for="queue_number">Queue Number</label>
+    <input
+      type="text"
+      id="queue_number"
+      name="queue_number"
+      placeholder="SOAP-483921"
+      value="{{ queue_hint or '' }}"
+      required
+      autofocus
+    >
+    <button type="submit" class="btn-primary">Continue to Dashboard</button>
+  </form>
+
+  <p class="login-foot">Don't have a queue number? <a href="{{ url_for('auth.queue') }}">Request one</a>.</p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock %}

@@ -1,1 +1,1 @@
-HTB{jwt_alg_confusion_123}
+HTB{KRAZY_JWT_!@$}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}SOAP Company{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('auth.queue') }}">
+      <span class="brand-mark">S</span>
+      <span class="brand-text">SOAP Company</span>
+    </a>
+    <nav class="topbar-nav">
+      {% block topbar_nav %}{% endblock %}
+    </nav>
+  </header>
+
+  <main class="page">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <span>&copy; 2026 SOAP Company &middot; Internal Use Only</span>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

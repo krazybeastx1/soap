@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}SOAP Company &middot; Queue{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/queue.css') }}">
+{% endblock %}
+{% block content %}
+<section class="queue-card">
+  <div class="queue-logo" aria-hidden="true">
+    <svg viewBox="0 0 64 64" width="56" height="56">
+      <rect x="4" y="4" width="56" height="56" rx="14" fill="#eaf3fc" stroke="#1e6bd6" stroke-width="2"/>
+      <circle cx="32" cy="22" r="8" fill="#1e6bd6"/>
+      <circle cx="18" cy="38" r="8" fill="#1e6bd6"/>
+      <circle cx="46" cy="38" r="8" fill="#1e6bd6"/>
+      <circle cx="32" cy="50" r="8" fill="#1e6bd6"/>
+    </svg>
+  </div>
+
+  <h1 class="queue-title">SOAP Company Queue</h1>
+  <p class="queue-sub">You are in the virtual queue. Please wait while we allocate your ticket.</p>
+
+  <div class="queue-ticket" aria-live="polite">
+    <span class="queue-ticket-label">Your Queue Number</span>
+    <span id="queue-number" class="queue-ticket-value">{{ queue_number }}</span>
+  </div>
+
+  <div class="progress" aria-label="Queue progress">
+    <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+  </div>
+
+  <div class="status-row">
+    <div class="spinner" aria-hidden="true"></div>
+    <p id="status-message" class="status-message">Allocating a SOAP handler...</p>
+  </div>
+
+  <p class="countdown-label">Forwarding in <span id="countdown">{{ countdown }}</span>s</p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.QUEUE_CONFIG = {
+    countdown: {{ countdown }},
+    redirectUrl: "{{ url_for('auth.login') }}"
+  };
+</script>
+<script src="{{ url_for('static', filename='js/queue.js') }}"></script>
+{% endblock %}

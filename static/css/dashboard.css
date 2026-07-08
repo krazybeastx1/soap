@@ -1,0 +1,74 @@
+/* Dashboard */
+.dash-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--c-blue), #4a8de9);
+  color: #fff;
+  padding: 28px 32px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 28px;
+}
+.dash-hero h1 { margin: 0 0 4px; font-size: 22px; }
+.dash-hero .muted { color: rgba(255, 255, 255, 0.85); margin: 0; }
+.dash-hero .badge { background: rgba(255, 255, 255, 0.2); color: #fff; }
+.dash-hero .btn-secondary { background: #fff; }
+
+.dash-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.dash-card {
+  display: block;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 22px;
+  color: var(--c-text);
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.dash-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--c-blue);
+  text-decoration: none;
+}
+.dash-card-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-blue-light);
+  color: var(--c-blue);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.dash-card h3 { margin: 0 0 6px; font-size: 16px; }
+.dash-card p { margin: 0; color: var(--c-muted); font-size: 13px; }
+
+.dash-news h2 { font-size: 18px; margin-bottom: 12px; }
+.news-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.news-list li {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.news-date {
+  display: inline-block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--c-blue);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.news-list h4 { margin: 0 0 4px; font-size: 15px; }
+.news-list p { margin: 0; color: var(--c-muted); font-size: 13px; }

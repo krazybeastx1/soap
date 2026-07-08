@@ -1,0 +1,44 @@
+/* Login page */
+.login-card {
+  max-width: 420px;
+  margin: 64px auto;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 36px 32px;
+  box-shadow: var(--shadow-md);
+}
+
+.login-header { text-align: center; margin-bottom: 24px; }
+.login-header h1 { margin: 12px 0 4px; font-size: 22px; }
+.login-sub { color: var(--c-muted); margin: 0; font-size: 14px; }
+
+.login-form label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--c-muted);
+  margin-bottom: 6px;
+}
+.login-form input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  margin-bottom: 18px;
+  transition: border 0.15s ease, box-shadow 0.15s ease;
+}
+.login-form input:focus {
+  outline: none;
+  border-color: var(--c-blue);
+  box-shadow: 0 0 0 3px rgba(30, 107, 214, 0.15);
+}
+
+.login-foot {
+  text-align: center;
+  margin-top: 18px;
+  color: var(--c-muted);
+  font-size: 13px;
+}

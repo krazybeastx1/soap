@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}SOAP Company &middot; Profile{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+{% block topbar_nav %}
+  <a class="topbar-link" href="{{ url_for('dashboard.home') }}">Dashboard</a>
+  <a class="topbar-link" href="{{ url_for('profile.profile') }}">Profile</a>
+  <a class="topbar-link" href="{{ url_for('auth.logout') }}">Logout</a>
+{% endblock %}
+
+{% block content %}
+<section class="profile-grid">
+  <div class="profile-card">
+    <div class="profile-avatar" aria-hidden="true">
+      <span>{{ user.get('sub', '?')[:1] | upper }}</span>
+    </div>
+    <h2>{{ user.get('sub') }}</h2>
+    <p class="muted">{{ company.tagline }}</p>
+
+    <dl class="profile-dl">
+      <dt>Employee ID</dt>
+      <dd>EMP-{{ (user.get('sub', '')[-6:] or '000000') }}</dd>
+
+      <dt>Queue Number</dt>
+      <dd><code>{{ user.get('queue') }}</code></dd>
+
+      <dt>Role</dt>
+      <dd><span class="badge {% if is_admin %}admin{% endif %}">{{ user.get('role') }}</span></dd>
+
+      <dt>Account Status</dt>
+      <dd><span class="badge ok">Active</span></dd>
+
+      <dt>Issued</dt>
+      <dd>{{ user.get('iat', '—') }}</dd>
+
+      <dt>Expires</dt>
+      <dd>{{ user.get('exp', '—') }}</dd>
+    </dl>
+  </div>
+
+  <div class="company-card">
+    <h3>{{ company.name }}</h3>
+    <dl class="profile-dl">
+      <dt>Founded</dt><dd>{{ company.founded }}</dd>
+      <dt>Headquarters</dt><dd>{{ company.address }}</dd>
+      <dt>Department</dt><dd>Internal Services</dd>
+    </dl>
+
+    {% if is_admin and flag %}
+      <div class="flag-block">
+        <span class="flag-label">Restricted token</span>
+        <code class="flag-value">{{ flag }}</code>
+      </div>
+    {% else %}
+      <div class="locked-block">
+        <p>Restricted content. Elevated role required.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
